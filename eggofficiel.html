@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GGE.Frog - Gang Game Evolution Frog</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'VT323', monospace;
+      color: #0ff;
+      background: black;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+      text-align: center;
+      position: relative;
+    }
+
+    /* Styles pour la page d'accueil */
+    #homepage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #homepage h1 {
+      font-size: 10vw; /* Taille relative à la largeur de la fenêtre */
+      color: #ff0;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 0;
+      animation: glitch 2s infinite;
+    }
+
+    #homepage input {
+      font-family: 'VT323', monospace;
+      font-size: 1.5rem;
+      padding: 10px;
+      margin-top: 20px;
+      background: transparent;
+      border: 1px solid #0ff;
+      color: #0ff;
+      text-align: center;
+      outline: none;
+    }
+
+    #homepage button {
+      font-family: 'VT323', monospace;
+      font-size: 1.5rem;
+      padding: 10px 20px;
+      margin-top: 20px;
+      background: transparent;
+      border: 1px solid #0ff;
+      color: #0ff;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    #homepage button:hover {
+      background: #0ff;
+      color: black;
+      box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff;
+    }
+
+    #homepage #error {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #f00;
+      display: none;
+    }
+
+    #homepage #hint {
+      margin-top: 10px;
+      font-size: 1.2rem;
+      color: #0ff;
+      opacity: 0.8;
+    }
+
+    /* Styles pour le contenu principal */
+    #main-content {
+      display: none; /* Masqué par défaut */
+      padding-top: 150px; /* Ajout du padding de 150px */
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      z-index: 1000;
+    }
+
+    header h1 {
+      font-size: 8vw; /* Taille relative à la largeur de la fenêtre */
+      color: #ff0;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 0;
+      animation: glitch 2s infinite;
+    }
+
+    @keyframes glitch {
+      0% { text-shadow: 2px 2px 0 #f00, -2px -2px 0 #0ff; }
+      25% { text-shadow: -2px -2px 0 #f00, 2px 2px 0 #0ff; }
+      50% { text-shadow: 4px -4px 0 #f00, -4px 4px 0 #0ff; }
+      75% { text-shadow: -4px 4px 0 #f00, 4px -4px 0 #0ff; }
+      100% { text-shadow: 2px 2px 0 #f00, -2px -2px 0 #0ff; }
+    }
+
+    /* Effet de neige avec les œufs et particules aléatoires */
+    @keyframes snowUp {
+      from { transform: translateY(100vh) rotate(var(--start-rotate)); }
+      to { transform: translateY(-100vh) rotate(360deg); }
+    }
+
+    @keyframes changeColor {
+      0% { color: rgba(255, 255, 0, 0.8); } /* Jaune */
+      20% { color: rgba(0, 255, 0, 0.8); } /* Vert */
+      40% { color: rgba(0, 0, 255, 0.8); } /* Bleu */
+      60% { color: rgba(128, 0, 128, 0.8); } /* Violet */
+      80% { color: rgba(255, 165, 0, 0.8); } /* Orange */
+      100% { color: rgba(255, 255, 0, 0.8); } /* Retour au jaune */
+    }
+
+    .egg-snowflake {
+      position: absolute;
+      bottom: -10px;
+      font-size: 1.2rem;
+      animation: snowUp linear infinite, changeColor 5s infinite;
+      opacity: 0.8;
+      font-weight: bold;
+      font-family: 'VT323', monospace;
+      --start-rotate: 0deg;
+      z-index: 1; /* Assurez-vous qu'ils sont au-dessus des autres éléments */
+      cursor: pointer; /* Curseur pointer pour indiquer qu'ils sont cliquables */
+      padding: 5px; /* Augmente la zone cliquable */
+    }
+
+    .frog-snowflake {
+      position: absolute;
+      bottom: -10px;
+      font-size: 1.5rem;
+      animation: snowUp linear infinite;
+      opacity: 0.8;
+      color: rgba(0, 255, 0, 0.8);
+      font-weight: bold;
+      font-family: 'VT323', monospace;
+      --start-rotate: 0deg;
+      cursor: pointer; /* Curseur pointer pour indiquer qu'ils sont cliquables */
+      z-index: 2; /* Assurez-vous qu'ils sont au-dessus des autres éléments */
+      padding: 5px; /* Augmente la zone cliquable */
+    }
+
+    .pixel-snowflake {
+      position: absolute;
+      bottom: -10px;
+      background-color: white;
+      width: 3px;
+      height: 3px;
+      animation: snowUp linear infinite;
+      opacity: 0.5;
+      animation-duration: 2s;
+      z-index: 1; /* Assurez-vous qu'ils sont au-dessus des autres éléments */
+    }
+
+    .gge-title {
+      font-size: 5vw; /* Taille relative à la largeur de la fenêtre */
+      color: #ff0;
+      text-shadow: 2px 2px 5px #ff0;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: glitch 2s infinite, changeColor 5s infinite;
+      z-index: 3; /* Assurez-vous qu'ils sont au-dessus des autres éléments */
+    }
+
+    .description {
+      font-size: 1.4rem;
+      color: #fff;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 15px;
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 15px;
+      background-color: rgba(0, 0, 0, 0.7);
+      box-shadow: 0 0 5px rgba(0, 255, 255, 0.3), 0 0 10px rgba(0, 255, 255, 0.2);
+      font-family: 'VT323', monospace;
+      text-align: left;
+      animation: glowDiv 5s infinite;
+      z-index: 3; /* Assurez-vous qu'ils sont au-dessus des autres éléments */
+    }
+
+    @keyframes glowDiv {
+      0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3); }
+      25% { box-shadow: 0 0 10px rgba(255, 0, 255, 0.5), 0 0 20px rgba(255, 0, 255, 0.3); }
+      50% { box-shadow: 0 0 10px rgba(255, 255, 0, 0.5), 0 0 20px rgba(255, 255, 0, 0.3); }
+      75% { box-shadow: 0 0 10px rgba(0, 255, 0, 0.5), 0 0 20px rgba(0, 255, 0, 0.3); }
+      100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3); }
+    }
+
+    .description strong {
+      color: #ff0;
+      font-size: 1.6rem;
+      animation: glitch-subtle 3s infinite;
+    }
+
+    @keyframes glitch-subtle {
+      0% { text-shadow: 1px 1px 0 rgba(255, 0, 0, 0.5), -1px -1px 0 rgba(0, 255, 255, 0.5); }
+      25% { text-shadow: -1px -1px 0 rgba(255, 0, 0, 0.5), 1px 1px 0 rgba(0, 255, 255, 0.5); }
+      50% { text-shadow: 2px -2px 0 rgba(255, 0, 0, 0.5), -2px 2px 0 rgba(0, 255, 255, 0.5); }
+      75% { text-shadow: -2px 2px 0 rgba(255, 0, 0, 0.5), 2px -2px 0 rgba(0, 255, 255, 0.5); }
+      100% { text-shadow: 1px 1px 0 rgba(255, 0, 0, 0.5), -1px -1px 0 rgba(0, 255, 255, 0.5); }
+    }
+
+    .glitch-button {
+      font-size: 1.5rem;
+      padding: 15px 30px;
+      border: 1px solid #0ff;
+      background: transparent;
+      color: #0ff;
+      cursor: pointer;
+      position: relative;
+      margin: 10px;
+      text-transform: uppercase;
+      transition: 0.3s;
+      font-family: 'VT323', monospace;
+      animation: glowBorderButton 3s infinite alternate;
+      z-index: 3; /* Assurez-vous qu'ils sont au-dessus des autres éléments */
+    }
+
+    @keyframes glowBorderButton {
+      0% { border-color: rgba(0, 255, 255, 0.8); }
+      50% { border-color: rgba(255, 0, 255, 0.8); }
+      100% { border-color: rgba(0, 255, 255, 0.8); }
+    }
+
+    .glitch-button:hover {
+      background: #0ff;
+      color: black;
+      box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-size: 1.5rem;
+      color: #f00;
+      z-index: 3; /* Assurez-vous qu'ils sont au-dessus des autres éléments */
+    }
+
+    #score {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 2rem;
+      color: #ff0;
+      text-shadow: 2px 2px 5px #ff0;
+      z-index: 3; /* Assurez-vous qu'ils sont au-dessus des autres éléments */
+    }
+
+    /* Media Queries pour les petits écrans */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 10vw; /* Taille plus petite pour les petits écrans */
+      }
+
+      .gge-title {
+        font-size: 8vw; /* Taille plus petite pour les petits écrans */
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Barre de score (visible sur les deux pages) -->
+  <div id="score">Score: 0</div>
+
+  <!-- Page d'accueil -->
+  <div id="homepage">
+    <h1>Are you ready ?</h1>
+    <input type="password" id="passwordInput" placeholder="Enter Password" />
+    <button id="submitPassword">Submit</button>
+    <div id="hint">Seulement les bon FREN connaissent la réponse.</div>
+    <div id="error">Incorrect password! Try 69 or 420.</div>
+  </div>
+
+  <!-- Contenu principal (masqué par défaut) -->
+  <div id="main-content">
+    <header>
+      <h1>Gang Game Evolution Frog</h1>
+    </header>
+    <div class="gge-title">GGE.Frog</div>
+    <button id="connectWallet" class="glitch-button">Connect Wallet</button>
+    <button id="mintNFT" class="glitch-button" disabled>Mint Your Unique Egg</button>
+    <p class="description">GGE.Frog is a revolutionary NFT project where you can mint Unique Eggs that evolve into unique creatures. Each egg is a gateway to a new world of possibilities in the Glitch Universe.</p>
+    <p class="description"><strong>How it works:</strong><br> 1. Mint your Unique Egg using your connected wallet.<br> 2. Collect 3 eggs to evolve them into a baby creature.<br> 3. Raise your creatures, trade them, and compete in the Web3 ecosystem.</p>
+    <p class="description"><strong>Join the Gang:</strong><br> Become part of the GGE.Frog community and dominate the Glitch Universe!</p>
+    <p class="description"><strong>Exclusively on $based</strong></p>
+    <p id="message"></p>
+  </div>
+
+  <script>
+    // Gestion de la page d'accueil
+    const homepage = document.getElementById("homepage");
+    const mainContent = document.getElementById("main-content");
+    const passwordInput = document.getElementById("passwordInput");
+    const submitButton = document.getElementById("submitPassword");
+    const errorMessage = document.getElementById("error");
+
+    submitButton.addEventListener("click", () => {
+      const password = passwordInput.value;
+      if (password === "69" || password === "420") {
+        homepage.style.display = "none"; // Masquer la page d'accueil
+        mainContent.style.display = "block"; // Afficher le contenu principal
+      } else {
+        errorMessage.style.display = "block"; // Afficher un message d'erreur
+      }
+    });
+
+    // Gestion du mini-jeu
+    let score = 0;
+    const scoreElement = document.getElementById("score");
+
+    function createEggSnowflakes() {
+      const snowContainer = document.body;
+      for (let i = 0; i < 30; i++) {
+        let eggSnowflake = document.createElement("div");
+        eggSnowflake.className = "egg-snowflake";
+        eggSnowflake.innerText = "⬯";
+        eggSnowflake.style.left = Math.random() * 100 + "vw";
+        eggSnowflake.style.animationDuration = (Math.random() * 4 + 3) + "s";
+        eggSnowflake.style.opacity = Math.random();
+        eggSnowflake.style.fontSize = (Math.random() * 1.5 + 0.8) + "rem";
+        eggSnowflake.style.setProperty('--start-rotate', `${Math.random() * 360}deg`);
+        snowContainer.appendChild(eggSnowflake);
+
+        // Ajouter un événement de clic sur l'œuf
+        eggSnowflake.addEventListener("click", () => {
+          score += 69; // 69 points par œuf
+          scoreElement.innerText = `Score: ${score}`;
+          eggSnowflake.remove(); // Supprimer l'œuf après avoir cliqué
+        });
+      }
+
+      for (let i = 0; i < 25; i++) {
+        let pixelSnowflake = document.createElement("div");
+        pixelSnowflake.className = "pixel-snowflake";
+        pixelSnowflake.style.left = Math.random() * 100 + "vw";
+        pixelSnowflake.style.animationDuration = (Math.random() * 2 + 1) + "s";
+        snowContainer.appendChild(pixelSnowflake);
+      }
+    }
+
+    function createFrogSnowflake() {
+      const snowContainer = document.body;
+      let frogSnowflake = document.createElement("div");
+      frogSnowflake.className = "frog-snowflake";
+      frogSnowflake.innerText = "🐸";
+      frogSnowflake.style.left = Math.random() * 100 + "vw";
+      frogSnowflake.style.animationDuration = (Math.random() * 10 + 5) + "s"; // Durée plus longue
+      frogSnowflake.style.opacity = Math.random();
+      frogSnowflake.style.fontSize = (Math.random() * 1.5 + 0.8) + "rem";
+      frogSnowflake.style.setProperty('--start-rotate', `${Math.random() * 360}deg`);
+      snowContainer.appendChild(frogSnowflake);
+
+      // Ajouter un événement de clic sur la grenouille
+      frogSnowflake.addEventListener("click", () => {
+        score += 420; // 420 points par grenouille
+        scoreElement.innerText = `Score: ${score}`;
+        frogSnowflake.remove(); // Supprimer la grenouille après avoir cliqué
+      });
+
+      // Supprimer la grenouille après 20 secondes (au lieu de 10)
+      setTimeout(() => {
+        frogSnowflake.remove();
+      }, 20000);
+    }
+
+    // Faire apparaître une grenouille de temps en temps
+    setInterval(() => {
+      if (Math.random() < 0.2) { // 20% de chance d'apparition
+        createFrogSnowflake();
+      }
+    }, 3000); // Toutes les 3 secondes
+
+    createEggSnowflakes();
+  </script>
+</body>
+</html>
